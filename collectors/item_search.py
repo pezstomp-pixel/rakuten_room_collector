@@ -1,5 +1,6 @@
 # collectors/item_search.py
 
+import os
 import time
 from typing import List, Dict, Any
 
@@ -15,6 +16,19 @@ from config import (
     MIN_AFFILIATE_RATE,
 )
 
+# Webアプリケーションタイプのキーで叩くときに必要になるヘッダー
+# （バックエンドタイプで叩くときも悪さはしないので、常に付けてしまってOK）
+HEADERS = {
+    "Referer": os.getenv("RAKUTEN_REFERER", "https://www.rakuten.co.jp/"),
+    "Origin": os.getenv("RAKUTEN_ORIGIN", "https://www.rakuten.co.jp/"),
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    ),
+}
+
+
 def fetch_search_items(keyword: str) -> List[Dict[str, Any]]:
     """キーワードで楽天市場アイテム検索APIを叩き、Items配列をまとめて返す。"""
     all_items: List[Dict[str, Any]] = []
@@ -28,11 +42,9 @@ def fetch_search_items(keyword: str) -> List[Dict[str, Any]]:
             "page": page,
             "format": "json",
             "formatVersion": 2,
-
             # フィルタ
             "minAffiliateRate": MIN_AFFILIATE_RATE,
             "hasReviewFlag": 1,
-
             # 並び順
             "sort": "-reviewCount",
         }
@@ -41,10 +53,14 @@ def fetch_search_items(keyword: str) -> List[Dict[str, Any]]:
             resp = requests.get(
                 ICHIBA_ITEM_SEARCH_URL,
                 params=params,
+                headers=HEADERS,
                 timeout=REQUEST_TIMEOUT,
             )
         except requests.RequestException as e:
-            print(f"[ERROR] request failed: keyword={keyword}, page={page}, error={e}")
+            print(
+                f"[ERROR] request failed: keyword={keyword}, "
+                f"page={page}, error={e}"
+            )
             break
 
         if resp.status_code != 200:
