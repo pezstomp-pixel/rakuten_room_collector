@@ -3,6 +3,9 @@ name: Rakuten ROOM collector
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+      timezone: "Asia/Tokyo"
 
 jobs:
   run-collector:
