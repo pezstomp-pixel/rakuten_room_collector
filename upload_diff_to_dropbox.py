@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-DROPBOX_BASE_PATH = "/daily-auto-post-bot/rakuten"
+DROPBOX_BASE_PATH = "/rakuten_room_collector"
 
 
 def load_previous_candidate() -> pd.DataFrame | None:
