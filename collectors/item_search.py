@@ -19,8 +19,8 @@ from config import (
 # Webアプリケーションタイプのキーで叩くときに必要になるヘッダー
 # （バックエンドタイプで叩くときも悪さはしないので、常に付けてしまってOK）
 HEADERS = {
-    "Referer": os.getenv("RAKUTEN_REFERER", "https://www.rakuten.co.jp/"),
-    "Origin": os.getenv("RAKUTEN_ORIGIN", "https://www.rakuten.co.jp/"),
+    "Referer": "https://github.com/",
+    "Origin": "https://github.com/",
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
