@@ -6,8 +6,8 @@ from pathlib import Path
 
 import dropbox
 import pandas as pd
+import requests  # ★ 追加
 
-# config.py を import しない
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -50,6 +50,32 @@ def build_diff_df(prev_df: pd.DataFrame | None, curr_df: pd.DataFrame) -> pd.Dat
     return diff_df
 
 
+def get_access_token_from_refresh() -> str:
+    """GitHub Secrets の refresh token から access token を取得"""
+    app_key = os.getenv("DROPBOX_APP_KEY", "").strip()
+    app_secret = os.getenv("DROPBOX_APP_SECRET", "").strip()
+    refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN", "").strip()
+
+    if not app_key or not app_secret or not refresh_token:
+        raise ValueError("DROPBOX_APP_KEY / DROPBOX_APP_SECRET / DROPBOX_REFRESH_TOKEN が足りません")
+
+    resp = requests.post(
+        "https://api.dropboxapi.com/oauth2/token",
+        data={
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "client_id": app_key,
+            "client_secret": app_secret,
+        },
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    access_token = data.get("access_token")
+    if not access_token:
+        raise RuntimeError(f"access_token の取得に失敗しました: {data}")
+    return access_token
+
+
 def upload_excel_to_dropbox(diff_df: pd.DataFrame, dbx: dropbox.Dropbox):
     today = datetime.now().strftime("%Y%m%d")
     diff_count = len(diff_df)
@@ -73,9 +99,7 @@ def upload_excel_to_dropbox(diff_df: pd.DataFrame, dbx: dropbox.Dropbox):
 
 
 def main():
-    token = os.getenv("DROPBOX_ACCESS_TOKEN", "").strip()
-    if not token:
-        raise ValueError("DROPBOX_ACCESS_TOKEN がありません")
+    access_token = get_access_token_from_refresh()
 
     curr_path = OUTPUT_DIR / "candidate_items.csv"
     if not curr_path.exists():
@@ -86,7 +110,7 @@ def main():
 
     diff_df = build_diff_df(prev_df, curr_df)
 
-    dbx = dropbox.Dropbox(token)
+    dbx = dropbox.Dropbox(access_token)
     upload_excel_to_dropbox(diff_df, dbx)
 
     save_current_as_previous()
