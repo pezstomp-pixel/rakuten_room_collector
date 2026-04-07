@@ -1,5 +1,6 @@
 .env
 __pycache__/
-output/
+output/*
+!output/prev_candidate_items.csv
 *.pyc
 .DS_Store
